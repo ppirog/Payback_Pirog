@@ -2,6 +2,7 @@ package com.payback.payback_pirog.contrtoller;
 
 public class ResponseDto {
     private String message;
+
     public ResponseDto(String message) {
         this.message = message;
     }
