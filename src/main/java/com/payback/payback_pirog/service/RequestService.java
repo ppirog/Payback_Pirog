@@ -6,7 +6,6 @@ import com.payback.payback_pirog.model.Request;
 import com.payback.payback_pirog.model.RequestRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
@@ -20,26 +19,38 @@ public class RequestService {
 
     private static final Logger log = LoggerFactory.getLogger(RequestService.class);
     private final RequestRepository requestRepository;
+    private final RequestQueue requestQueue;
 
-    public RequestService(RequestRepository requestRepository) {
+    public RequestService(RequestRepository requestRepository, RequestQueue requestQueue) {
         this.requestRepository = requestRepository;
+        this.requestQueue = requestQueue;
     }
 
-    public ResponseDto process(RequestDto dto){
-        switch (dto.getType()) {
+    public ResponseDto process(RequestDto dto) {
+        requestQueue.add(dto);
+
+        RequestDto element;
+        try {
+            element = requestQueue.take();
+        } catch (InterruptedException e) {
+            log.error("EMPTY QUEUE");
+            return new ResponseDto("QUEUE ERROR");
+        }
+
+        switch (element.getType()) {
             case "1" -> {
-                save(dto);
+                saveToDatabase(element);
                 return new ResponseDto("SAVED TO DATABASE");
             }
             case "2" -> {
                 return new ResponseDto("REJECTED");
             }
             case "3" -> {
-                saveToFile(dto);
+                saveToFile(element);
                 return new ResponseDto("SAVED TO FILE");
             }
             case "4" -> {
-                log.warn("LOGGED TO CONSOLE TYPE: {}", dto.getType());
+                log.warn("LOGGED TO CONSOLE TYPE: {}", element.getType());
                 return new ResponseDto("LOGGED TO CONSOLE");
             }
             default -> {
@@ -48,7 +59,7 @@ public class RequestService {
         }
     }
 
-    private void save(RequestDto dto) {
+    private void saveToDatabase(RequestDto dto) {
         Request request = new Request();
         request.setType(dto.getType());
         requestRepository.save(request);
