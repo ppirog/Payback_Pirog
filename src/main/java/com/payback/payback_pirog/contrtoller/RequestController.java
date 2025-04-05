@@ -19,6 +19,6 @@ public class RequestController {
 
     @PostMapping
     public ResponseEntity<ResponseDto> process(@RequestBody RequestDto request){
-        requestService.save(request);
-        return ResponseEntity.ok(new ResponseDto("Saved"));}
+        ResponseDto response = requestService.process(request);
+        return ResponseEntity.ok(response);}
 }
